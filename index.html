@@ -1,0 +1,379 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quality Management | 舞台監督・管理運営・未経験からの舞台制作</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #ffffff;
+            color: #111111;
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            overflow-x: hidden;
+        }
+        .fade-in {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 1.4s cubic-bezier(0.22, 1, 0.36, 1), transform 1.4s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        /* Soft shadows for cards in light mode */
+        .hover-card {
+            transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        }
+        .hover-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .text-vertical {
+            writing-mode: vertical-rl;
+        }
+        .stagger-1 { transition-delay: 0.1s; }
+        .stagger-2 { transition-delay: 0.2s; }
+        .stagger-3 { transition-delay: 0.3s; }
+        
+        /* Custom selection color */
+        ::selection {
+            background-color: #000;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        const Icons = {
+            ArrowRight: () => (
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14m-7-7 7 7-7 7"/></svg>
+            ),
+            Shield: () => (
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            ),
+            Speaker: () => (
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect width="16" height="20" x="4" y="2" rx="2"/><circle cx="12" cy="14" r="4"/><line x1="12" y1="6" x2="12.01" y2="6"/></svg>
+            ),
+            Heart: () => (
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+            ),
+            Zap: () => (
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            )
+        };
+
+        const useScrollReveal = () => {
+            useEffect(() => {
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('visible');
+                        }
+                    });
+                }, { threshold: 0.1 });
+
+                document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+                return () => observer.disconnect();
+            }, []);
+        };
+
+        const App = () => {
+            useScrollReveal();
+
+            // Slightly brighter images by using higher quality and different cuts if needed, 
+            // but mainly removing grayscale filters in CSS.
+            const images = {
+                hero: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&q=80&w=2000",
+                equipment: "https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&q=80&w=1200",
+                beginner: "https://images.unsplash.com/photo-1524368535928-5b5e00ddc76b?auto=format&fit=crop&q=80&w=1200",
+                consulting: "https://images.unsplash.com/photo-1551818255-e6e10975bc17?auto=format&fit=crop&q=80&w=1200",
+                stage: "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&q=80&w=1200",
+                hirose: "https://images.unsplash.com/photo-1514525253440-b393452e8d26?auto=format&fit=crop&q=80&w=1200",
+                theater_bg: "https://images.unsplash.com/photo-1507676184212-d03ab07a01bf?auto=format&fit=crop&q=80&w=2000",
+                cta_bg: "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&q=80&w=2000"
+            };
+
+            return (
+                <div className="min-h-screen bg-white text-gray-900">
+                    {/* Navigation - White background with blur */}
+                    <nav className="fixed top-0 w-full z-50 px-8 md:px-16 py-6 flex justify-between items-baseline bg-white/80 backdrop-blur-md border-b border-gray-100 transition-all duration-300">
+                        <div className="flex items-baseline gap-4">
+                            <span className="font-black text-2xl tracking-tighter text-black">QUALITY MANAGEMENT</span>
+                            <span className="hidden md:block text-[10px] font-black opacity-40 tracking-[0.3em] text-black">EST. 2004</span>
+                        </div>
+                        <div className="hidden md:flex gap-12 text-[11px] font-bold tracking-widest opacity-60 uppercase text-black">
+                            <a href="#vision" className="hover:opacity-100 transition-opacity">Vision</a>
+                            <a href="#beginner" className="hover:opacity-100 transition-opacity">For Beginners</a>
+                            <a href="#services" className="hover:opacity-100 transition-opacity">Services</a>
+                            <a href="#contact" className="hover:opacity-100 transition-opacity underline underline-offset-4">Consulting</a>
+                        </div>
+                    </nav>
+
+                    {/* Hero Section - Keep image impact but remove grayscale and use white text */}
+                    <header className="relative h-screen flex items-center px-8 md:px-16 overflow-hidden">
+                        <div className="absolute inset-0 z-0">
+                            {/* Removed grayscale, lighter overlay */}
+                            <img src={images.hero} alt="Stage Atmosphere" className="w-full h-full object-cover scale-105" />
+                            <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent"></div>
+                        </div>
+                        
+                        <div className="relative z-10 w-full fade-in text-white">
+                            <p className="text-sm font-black tracking-[0.4em] mb-12 opacity-80 uppercase">Professional Excellence</p>
+                            <h1 className="text-5xl md:text-[8rem] font-black leading-[1.1] tracking-tighter mb-16 shadow-lg">
+                                理想の舞台を、<br />
+                                <span className="text-white">現実にする。</span>
+                            </h1>
+                            <div className="flex flex-col md:flex-row items-start md:items-end gap-12">
+                                <p className="text-xl md:text-3xl font-medium max-w-2xl leading-relaxed opacity-90 drop-shadow-md">
+                                    実績20年、マッスルミュージカルの興奮を支えた技術。 <br />
+                                    そのすべてを、あなたの「やりたい」という情熱へ。
+                                </p>
+                            </div>
+                        </div>
+                    </header>
+
+                    {/* Beginner Support Section - White/Gray theme */}
+                    <section id="beginner" className="py-40 px-8 md:px-16 bg-white">
+                        <div className="max-w-7xl mx-auto flex flex-col md:flex-row gap-24 items-center">
+                            <div className="w-full md:w-1/2 fade-in">
+                                <div className="inline-block px-4 py-2 bg-black text-white text-[10px] font-black tracking-widest mb-8 uppercase rounded-full">First Step Support</div>
+                                <h2 className="text-5xl md:text-7xl font-black mb-12 tracking-tighter leading-tight text-black">
+                                    知識ゼロから、<br />
+                                    最高の舞台を創る。
+                                </h2>
+                                <p className="text-xl text-gray-600 leading-relaxed mb-12 font-medium">
+                                    「イベントをやりたいが、何から手をつければいいか分からない」<br />
+                                    「最高のエンターテインメントを目指したいが、技術的な壁がある」<br /><br />
+                                    私たちは、そんな未経験の方々の想いを形にする「並走型」のサポートを提供します。舞台監督のプロフェッショナルが、企画、演出、機材選定まで、あなたの最高のパートナーとしてサポートします。
+                                </p>
+                                <button className="group flex items-center gap-4 text-xl font-black text-black border-b-2 border-black pb-2 hover:opacity-70 transition-opacity">
+                                    未経験からの相談ガイドを見る 
+                                    <span className="group-hover:translate-x-2 transition-transform"><Icons.ArrowRight /></span>
+                                </button>
+                            </div>
+                            <div className="w-full md:w-1/2 h-[700px] relative fade-in stagger-2">
+                                {/* Brighter image, no grayscale */}
+                                <img src={images.beginner} alt="Dreamers" className="w-full h-full object-cover rounded-3xl shadow-2xl" />
+                                <div className="absolute -bottom-12 -left-12 bg-white text-black p-12 rounded-3xl hidden md:block shadow-[0_20px_50px_rgba(0,0,0,0.1)] z-10">
+                                    <p className="text-4xl font-black tracking-tighter mb-4">"Anyone can be a Creator."</p>
+                                    <p className="text-gray-400 text-sm font-bold tracking-widest">株式会社クオリティマネジメントの信念</p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Expertise Grid - Light gray background for contrast */}
+                    <section id="services" className="py-40 px-8 md:px-16 bg-gray-50">
+                        <div className="max-w-7xl mx-auto">
+                            <div className="mb-24 flex justify-between items-end fade-in">
+                                <h2 className="text-xs font-black tracking-[0.5em] text-gray-400 uppercase italic">Comprehensive Services</h2>
+                                <span className="h-px flex-1 bg-gray-200 mx-12 mb-2"></span>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 fade-in">
+                                {/* Service 01 */}
+                                <div className="hover-card bg-white p-12 md:p-16 rounded-[2.5rem] border border-gray-100 relative overflow-hidden group">
+                                    <div className="relative z-10">
+                                        <div className="flex justify-between items-start mb-12">
+                                            <div className="w-16 h-16 bg-gray-100 text-black rounded-full flex items-center justify-center">
+                                                <Icons.Zap />
+                                            </div>
+                                            <span className="text-4xl font-black text-gray-100">01</span>
+                                        </div>
+                                        <h3 className="text-3xl font-black mb-6 text-black">舞台監督受託・進行</h3>
+                                        <p className="text-gray-500 leading-relaxed mb-12 font-medium">20年の実績に基づく、寸分の狂いもない進行管理。大規模案件から小劇場まで、現場の「命」と「感動」を守ります。</p>
+                                        <div className="h-56 rounded-2xl overflow-hidden">
+                                            <img src={images.stage} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Service 02 */}
+                                <div className="hover-card bg-white p-12 md:p-16 rounded-[2.5rem] border border-gray-100 relative overflow-hidden group">
+                                    <div className="relative z-10">
+                                        <div className="flex justify-between items-start mb-12">
+                                            <div className="w-16 h-16 bg-gray-100 text-black rounded-full flex items-center justify-center">
+                                                <Icons.Speaker />
+                                            </div>
+                                            <span className="text-4xl font-black text-gray-100">02</span>
+                                        </div>
+                                        <h3 className="text-3xl font-black mb-6 text-black">舞台機材レンタル</h3>
+                                        <p className="text-gray-500 leading-relaxed mb-12 font-medium">照明、音響、舞台美術。プロ仕様の最新機材をレンタル提供。現場に最適なスペック選定から設営までサポート可能です。</p>
+                                        <div className="h-56 rounded-2xl overflow-hidden">
+                                            <img src={images.equipment} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Service 03 */}
+                                <div className="hover-card bg-white p-12 md:p-16 rounded-[2.5rem] border border-gray-100 relative overflow-hidden group">
+                                    <div className="relative z-10">
+                                        <div className="flex justify-between items-start mb-12">
+                                            <div className="w-16 h-16 bg-gray-100 text-black rounded-full flex items-center justify-center">
+                                                <Icons.Shield />
+                                            </div>
+                                            <span className="text-4xl font-black text-gray-100">03</span>
+                                        </div>
+                                        <h3 className="text-3xl font-black mb-6 text-black">劇場管理スタッフ派遣</h3>
+                                        <p className="text-gray-500 leading-relaxed mb-12 font-medium">劇場の「小屋付き」スタッフを常駐・派遣。劇場のハードウェアを知り尽くしたプロが、日々の安全と品質を担保します。</p>
+                                        <div className="h-56 rounded-2xl overflow-hidden">
+                                            <img src={images.theater_bg} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Service 04 */}
+                                <div className="hover-card bg-white p-12 md:p-16 rounded-[2.5rem] border border-gray-100 relative overflow-hidden group">
+                                    <div className="relative z-10">
+                                        <div className="flex justify-between items-start mb-12">
+                                            <div className="w-16 h-16 bg-gray-100 text-black rounded-full flex items-center justify-center">
+                                                <Icons.Heart />
+                                            </div>
+                                            <span className="text-4xl font-black text-gray-100">04</span>
+                                        </div>
+                                        <h3 className="text-3xl font-black mb-6 text-black">制作トータルコンサル</h3>
+                                        <p className="text-gray-500 leading-relaxed mb-12 font-medium">未経験からのイベント・舞台立ち上げを全面的にバックアップ。夢を最高のエンターテインメントに昇華させるための全工程を支援。</p>
+                                        <div className="h-56 rounded-2xl overflow-hidden">
+                                            <img src={images.consulting} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Featured Professional (Masahiko Hirose) - White background */}
+                    <section className="py-32 px-8 md:px-16 bg-white border-y border-gray-100">
+                        <div className="max-w-7xl mx-auto flex flex-col md:flex-row gap-16 items-center">
+                            <div className="w-full md:w-5/12 h-[600px] relative fade-in group">
+                                <div className="absolute inset-0 bg-gray-100 transform -rotate-3 rounded-2xl group-hover:rotate-0 transition-transform duration-700"></div>
+                                {/* No grayscale for person */}
+                                <img src={images.hirose} alt="Masahiko Hirose" className="relative w-full h-full object-cover rounded-2xl shadow-xl transition-all duration-700" />
+                            </div>
+                            <div className="w-full md:w-7/12 fade-in stagger-1">
+                                <div className="text-xs font-black tracking-[0.5em] text-gray-400 uppercase mb-8">Featured Director</div>
+                                <h3 className="text-4xl md:text-6xl font-black mb-4 text-black">廣瀬 雅彦</h3>
+                                <p className="text-xl font-bold text-gray-500 mb-8 tracking-widest">Masahiko Hirose / Stage Director & Production</p>
+                                
+                                <p className="text-lg text-gray-600 leading-relaxed mb-8 font-medium">
+                                    演劇・エンターテインメント業界の第一線で活躍し続ける熟練の舞台監督。
+                                    演劇ユニット「梅棒」の公演や、宝塚歌劇団出身者のコンサートなど、華やかさと緻密な進行が求められる現場で数多くの実績を持つ。<br/><br/>
+                                    2025年3月上演の舞台『FOLKER』をはじめ、現在も現場の最前線で指揮を執り、その手腕は多くの演出家・出演者から厚い信頼を得ている。
+                                </p>
+                                
+                                <div className="inline-block border-2 border-black px-8 py-4 rounded-full text-sm font-bold tracking-widest uppercase hover:bg-black hover:text-white transition-colors cursor-pointer">
+                                    Top Level Quality
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* CEO Message Section - Light Overlay */}
+                    <section id="vision" className="relative py-40 px-8 md:px-16 overflow-hidden">
+                        <div className="absolute inset-0 z-0 opacity-10" style={{backgroundImage: `url(${images.theater_bg})`, backgroundSize: 'cover', backgroundPosition: 'center'}}></div>
+                        {/* White gradient overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-b from-white via-white/80 to-white z-0"></div>
+                        
+                        <div className="relative z-10 max-w-3xl mx-auto text-center fade-in">
+                            <h2 className="text-xs font-black tracking-[1em] mb-12 text-gray-400 uppercase">CEO Message</h2>
+                            <p className="text-2xl md:text-4xl leading-relaxed italic font-light text-gray-800 mb-16">
+                                「舞台は、幕が上がれば止まらない。<br />
+                                だからこそ、最悪を想定し、最善を尽くす。<br />
+                                それが、我々クオリティマネジメントの流儀です」
+                            </p>
+                            <div className="h-px w-32 bg-gray-200 mx-auto mb-12"></div>
+                            <div className="flex flex-col items-center">
+                                <span className="text-sm text-gray-400 mb-2 font-bold tracking-widest uppercase">Representative Director</span>
+                                <span className="text-3xl font-black tracking-widest underline decoration-1 underline-offset-8 text-black">矢部 大</span>
+                                <span className="text-xs text-gray-400 mt-4 font-bold tracking-widest">株式会社クオリティマネジメント</span>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Final CTA - Dark contrast for impact */}
+                    <section id="contact" className="relative py-64 px-8 bg-black text-white text-center overflow-hidden">
+                        <div className="absolute inset-0 opacity-40">
+                             <img src={images.cta_bg} className="w-full h-full object-cover" />
+                        </div>
+                        <div className="absolute inset-0 bg-black/60"></div>
+
+                        <div className="relative z-10 max-w-6xl mx-auto fade-in">
+                            <h2 className="text-6xl md:text-[9rem] font-black leading-[0.8] tracking-tighter mb-20 text-white">
+                                NO PASSION,<br />NO STAGE.
+                            </h2>
+                            <p className="text-2xl md:text-3xl font-bold mb-16 max-w-3xl mx-auto text-shadow-lg">
+                                プロの安心も、機材の準備も、初めての挑戦も。 <br />
+                                私たちクオリティマネジメントにすべてお任せください。
+                            </p>
+                            <div className="flex flex-col md:flex-row justify-center gap-8">
+                                <button className="bg-white text-black px-20 py-8 rounded-full font-black text-2xl hover:scale-105 transition-transform flex items-center justify-center gap-4 shadow-2xl">
+                                    無料相談を予約する <Icons.ArrowRight />
+                                </button>
+                                <button className="bg-transparent border-2 border-white px-20 py-8 rounded-full font-black text-2xl hover:bg-white hover:text-black transition-all">
+                                    機材リストを見る
+                                </button>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Footer - Clean light footer or Dark for grounding? Let's go Dark for stability */}
+                    <footer className="py-24 px-8 md:px-16 bg-[#111] text-white">
+                        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between gap-16">
+                            <div className="space-y-8 flex-1">
+                                <div className="text-2xl font-black tracking-tighter">QUALITY MANAGEMENT</div>
+                                <div className="space-y-4 opacity-60 text-sm font-medium leading-relaxed tracking-wide">
+                                    <p>株式会社クオリティマネジメント</p>
+                                    <p>代表取締役：矢部 大</p>
+                                    <p>所在地：〒193-0833 東京都八王子市めじろ台4-26-15</p>
+                                </div>
+                            </div>
+                            
+                            <div className="flex-1 grid grid-cols-2 gap-12">
+                                <div className="space-y-4">
+                                    <h4 className="text-[10px] font-black tracking-[0.3em] opacity-40 uppercase">Services</h4>
+                                    <ul className="text-sm space-y-2 opacity-60 hover:opacity-100 transition-opacity">
+                                        <li><a href="#">舞台監督受託</a></li>
+                                        <li><a href="#">劇場管理・スタッフ派遣</a></li>
+                                        <li><a href="#">機材レンタル</a></li>
+                                        <li><a href="#">制作コンサルティング</a></li>
+                                    </ul>
+                                </div>
+                                <div className="space-y-4">
+                                    <h4 className="text-[10px] font-black tracking-[0.3em] opacity-40 uppercase">About</h4>
+                                    <ul className="text-sm space-y-2 opacity-60 hover:opacity-100 transition-opacity">
+                                        <li><a href="#">会社概要</a></li>
+                                        <li><a href="#">実績紹介</a></li>
+                                        <li><a href="#">未経験者サポート</a></li>
+                                        <li><a href="#">お問い合わせ</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="max-w-7xl mx-auto mt-24 pt-12 border-t border-white/10 flex justify-between items-center">
+                            <p className="text-[10px] font-black opacity-20 tracking-[0.5em]">©2024 QUALITY MANAGEMENT CO., LTD. ALL RIGHTS RESERVED.</p>
+                            <div className="flex gap-8 opacity-40 text-[10px] font-black tracking-widest uppercase">
+                                <a href="#">Privacy Policy</a>
+                                <a href="#">Terms</a>
+                            </div>
+                        </div>
+                    </footer>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
